@@ -91,7 +91,7 @@ echo "[Match]" >> /etc/systemd/network/25-wireless.network
 echo "Name=wlan0" >> /etc/systemd/network/25-wireless.network
 echo "[Network]" >> /etc/systemd/network/25-wireless.network
 echo "DHCP=yes" >> /etc/systemd/network/25-wireless.network
-echo "Y" | pacman -S git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput ttf-ubuntu-mono-nerd chromium docker-compose docker alsa-utils acpilight
+echo "Y" | pacman -S git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput ttf-ubuntu-mono-nerd chromium docker-compose docker alsa-utils acpilight ttf-fira-code
 systemctl enable docker
 cd /opt
 git clone https://git.suckless.org/dwm 
