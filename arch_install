@@ -103,6 +103,8 @@ cat config.def.h.bak | sed 's/"st",/"alacritty",/' > config.def.h
 rm config.def.h.bak
 make && ln -sf /opt/dwm/dwm /usr/bin/dwm
 EEOF
+cp dotfiles/.bashrc /mnt/root/.
+cp dotfiles/.vimrc /mnt/root/.
 umount -R /mnt
 reboot
 }
