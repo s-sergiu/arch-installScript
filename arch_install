@@ -1,0 +1,163 @@
+#!/bin/bash
+
+function install() {
+HOSTNAME=
+ROOT_PASS=
+HOOKS=$(grep "^HOOKS=" /etc/mkinitcpio.conf)
+OK_HOOKS="HOOKS=(base udev autodetect microcode modconf kms keyboard encrypt lvm2 keymap consolefont block filesystems fsck)"
+BLKID=$(blkid /dev/sda2 | grep UUID= | awk '{ print $2 }' | cut -d '"' -f2)
+NEWLINE=$(echo -n)
+
+read -esp $"Please enter a root password: " ROOT_PASS
+echo -n "Please enter a hostname: "
+read HOSTNAME
+
+fdisk /dev/sda <<EEOF
+g
+n
+1
+$NEWLINE
++1G
+t
+1
+n
+2
+$NEWLINE
+$NEWLINE
+t
+2
+44
+w
+EEOF
+mkfs.fat -F 32 /dev/sda1
+pvcreate /dev/sda2
+vgcreate arch /dev/sda2
+lvcreate -L 4096Mib /dev/mapper/arch -n swap
+lvcreate -L 60G /dev/mapper/arch -n root
+#lvcreate -L 60G /dev/mapper/arch -n home
+lvcreate -L 16G /dev/mapper/arch -n var
+lvcreate -L 16G /dev/mapper/arch -n tmp
+mkfs.ext4 /dev/mapper/arch-root
+#mkfs.ext4 /dev/mapper/arch-home 
+mkfs.ext4 /dev/mapper/arch-var 
+mkfs.ext4 /dev/mapper/arch-tmp 
+mkswap /dev/mapper/arch-swap 
+swapon /dev/mapper/arch-swap
+mount /dev/mapper/arch-root /mnt
+#mount -m /dev/mapper/arch-home /mnt/home
+mount -m /dev/mapper/arch-tmp /mnt/tmp
+mount -m /dev/mapper/arch-var /mnt/var
+mount -m /dev/sda1 /mnt/boot
+cp iwd/* /var/lib/iwd/.
+iwctl station wlan0 scan
+sleep 1
+pacman -Syy 
+pacstrap -K /mnt base linux linux-firmware -y
+pacstrap -K /mnt vim iwd lvm2 -y
+genfstab -U /mnt >> /mnt/etc/fstab
+arch-chroot /mnt <<EEOF
+ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+hwclock --systohc
+cp /etc/locale.gen /etc/locale.gen.bak
+cat /etc/locale.gen.bak | sed "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" > /etc/locale.gen
+rm /etc/locale.gen.bak
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+locale-gen
+echo $HOSTNAME > /etc/hostname
+echo "127.0.0.1\tlocalhost" >> /etc/hosts
+cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
+cat /etc/mkinitcpio.conf.bak | sed "s/$HOOKS/$OK_HOOKS/"  > /etc/mkinitcpio.conf
+rm /etc/mkinitcpio.conf.bak
+mkinitcpio -P
+passwd <<EOFF
+$ROOT_PASS
+$ROOT_PASS
+EOFF
+bootctl install
+cp /boot/loader/loader.conf /boot/loader/loader.conf.bak
+cat /boot/loader/loader.conf.bak | sed "s/#timeout 3/timeout 3/"  > /boot/loader/loader.conf
+cp /boot/loader/loader.conf /boot/loader/loader.conf.bak
+cat /boot/loader/loader.conf.bak | sed "s/#console-mode keep/console-mode keep/"  > /boot/loader/loader.conf
+rm /boot/loader/loader.conf.bak
+echo "linux /vmlinuz-linux"  >> /boot/loader/entries/arch.conf
+echo "initrd /initramfs-linux.img" >> /boot/loader/entries/arch.conf
+echo "options root=UUID=$BLKID root=/dev/mapper/arch-root rw;" >> /boot/loader/entries/arch.conf
+systemctl enable systemd-homed
+systemctl start systemd-homed
+systemctl enable systemd-networkd
+systemctl enable systemd-resolved
+systemctl enable iwd
+echo "[Match]" >> /etc/systemd/network/25-wireless.network
+echo "Name=wlan0" >> /etc/systemd/network/25-wireless.network
+echo "[Network]" >> /etc/systemd/network/25-wireless.network
+echo "DHCP=yes" >> /etc/systemd/network/25-wireless.network
+echo "Y" | pacman -S git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput ttf-ubuntu-mono-nerd chromium docker-compose docker alsa-utils acpilight
+systemctl enable docker
+cd /opt
+git clone https://git.suckless.org/dwm 
+cd dwm
+cp config.def.h config.def.h.bak
+cat config.def.h.bak | sed 's/Mod1Mask/Mod4Mask/' > config.def.h
+cp config.def.h config.def.h.bak
+cat config.def.h.bak | sed 's/"st",/"alacritty",/' > config.def.h
+rm config.def.h.bak
+make && ln -sf /opt/dwm/dwm /usr/bin/dwm
+EEOF
+umount -R /mnt
+reboot
+}
+
+function cleanup() {
+umount -R /mnt
+swapoff /dev/mapper/arch-swap
+lvremove /dev/mapper/arch-swap -y
+lvremove /dev/mapper/arch-root -y
+lvremove /dev/mapper/arch-home -y
+lvremove /dev/mapper/arch-var -y
+lvremove /dev/mapper/arch-tmp -y
+
+vgremove /dev/mapper/arch -y
+
+pvremove /dev/sda2
+
+echo "y" | mkfs.ext4 /dev/sda
+wipefs --all /dev/sda
+cp iwd/* /var/lib/iwd/.
+sleep 1
+iwctl station wlan0 scan
+}
+
+press_enter() {
+  echo ""
+  echo -en $PRESS_ENTER"	Press Enter to continue "$ENDCOLOR
+  read
+  clear
+}
+
+exit_case() {
+	exit
+}
+
+incorrect_selection() {
+  echo -e $BG_RED"Wrong choice! Try again."$ENDCOLOR
+}
+
+until [ "$selection" = "q" ]; do
+  clear
+  echo ""
+  echo -e $GREEN"    	1  -  Load install script"$ENDCOLOR
+  echo -e $CYAN"    	2  -  Clean up partitions"$ENDCOLOR
+  echo -e $RED"    	0  -  Exit" $ENDCOLOR
+  echo ""
+  echo -en $MAGENTA"  Enter selection: "$ENDCOLOR
+  read selection
+  echo ""
+  case $selection in
+    1 ) clear ; install ; press_enter ;;
+    2 ) clear ; cleanup ; press_enter ;;
+    0 ) clear ; exit ;;
+    * ) clear ; incorrect_selection ; press_enter ;;
+  esac
+done
+
+
