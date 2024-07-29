@@ -12,15 +12,17 @@ NEWLINE=$(echo -n)
 read -esp $"Please enter a root password: " ROOT_PASS
 echo -n "Please enter a hostname: "
 read HOSTNAME
-echo -n "Do you want X enabled? y/n"
+echo -n "Do you want X enabled? [Y/n]: "
 read APPS
 
-if [[ APPS == 'y' ]] 
-	then 
-		APPS="git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput chromium docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind man-pages github-cli --noconfirm"
-	else
+if [[ $APPS == 'n' ]] 
+	then
 		APPS="git openssh make gcc docker-compose docker alsa-utils acpilight slock man valgrind lynx man-pages github-cli --noconfirm"
+	else
+		APPS="git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput chromium docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind man-pages github-cli --noconfirm"
 fi
+
+echo $APPS
 
 fdisk /dev/sda <<EEOF
 g
