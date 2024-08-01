@@ -17,9 +17,9 @@ read APPS
 
 if [[ $APPS == 'n' ]] 
 	then
-		APPS="git openssh make gcc docker-compose docker alsa-utils acpilight slock man valgrind lynx man-pages github-cli --noconfirm"
+		APPS="git openssh make gcc docker-compose docker alsa-utils acpilight slock man valgrind lynx man-pages github-cli ffmpeg --noconfirm"
 	else
-		APPS="git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput chromium docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind lynx man-pages github-cli --noconfirm"
+		APPS="git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput chromium docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind lynx man-pages github-cli ffmpeg --noconfirm"
 fi
 
 echo $APPS
