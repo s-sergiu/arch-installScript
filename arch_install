@@ -4,6 +4,7 @@ function install() {
 HOSTNAME=
 APPS=
 ROOT_PASS=
+X_DISABLED=
 HOOKS=$(grep "^HOOKS=" /etc/mkinitcpio.conf)
 OK_HOOKS="HOOKS=(base udev autodetect microcode modconf kms keyboard encrypt lvm2 keymap consolefont block filesystems fsck)"
 BLKID=$(blkid /dev/sda2 | grep UUID= | awk '{ print $2 }' | cut -d '"' -f2)
@@ -17,7 +18,8 @@ read APPS
 
 if [[ $APPS == 'n' ]] 
 	then
-		APPS="git openssh make gcc docker-compose docker alsa-utils acpilight slock man valgrind lynx man-pages github-cli ffmpeg --noconfirm"
+		APPS="git python-virtualenv mpv jq fzf tmux openssh make gcc docker-compose docker alsa-utils acpilight slock man valgrind lynx man-pages github-cli ffmpeg --noconfirm"
+		X_DISABLED=1
 	else
 		APPS="git openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput firefox docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind lynx man-pages github-cli ffmpeg --noconfirm"
 fi
@@ -69,53 +71,62 @@ pacstrap -K /mnt vim iwd lvm2 -y
 sleep 5
 genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt <<EEOF
-ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-hwclock --systohc
-cp /etc/locale.gen /etc/locale.gen.bak
-cat /etc/locale.gen.bak | sed "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" > /etc/locale.gen
-rm /etc/locale.gen.bak
-echo "LANG=en_US.UTF-8" > /etc/locale.conf
-locale-gen
-echo $HOSTNAME > /etc/hostname
-echo "127.0.0.1\tlocalhost" >> /etc/hosts
-cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
-cat /etc/mkinitcpio.conf.bak | sed "s/$HOOKS/$OK_HOOKS/"  > /etc/mkinitcpio.conf
-rm /etc/mkinitcpio.conf.bak
-mkinitcpio -P
-passwd <<EOFF
-$ROOT_PASS
-$ROOT_PASS
-EOFF
-bootctl install
-cp /boot/loader/loader.conf /boot/loader/loader.conf.bak
-cat /boot/loader/loader.conf.bak | sed "s/#timeout 3/timeout 3/"  > /boot/loader/loader.conf
-cp /boot/loader/loader.conf /boot/loader/loader.conf.bak
-cat /boot/loader/loader.conf.bak | sed "s/#console-mode keep/console-mode keep/"  > /boot/loader/loader.conf
-rm /boot/loader/loader.conf.bak
-echo "linux /vmlinuz-linux"  >> /boot/loader/entries/arch.conf
-echo "initrd /initramfs-linux.img" >> /boot/loader/entries/arch.conf
-echo "options root=UUID=$BLKID root=/dev/mapper/arch-root rw;" >> /boot/loader/entries/arch.conf
-systemctl enable systemd-homed
-systemctl start systemd-homed
-systemctl enable systemd-networkd
-systemctl enable systemd-resolved
-systemctl enable iwd
-echo "[Match]" >> /etc/systemd/network/25-wireless.network
-echo "Name=wlan0" >> /etc/systemd/network/25-wireless.network
-echo "[Network]" >> /etc/systemd/network/25-wireless.network
-echo "DHCP=yes" >> /etc/systemd/network/25-wireless.network
-echo "Y" | pacman -S $APPS
-systemctl enable docker
-cd /opt
-git clone https://git.suckless.org/dwm 
-cd dwm
-cp config.def.h config.def.h.bak
-cat config.def.h.bak | sed 's/Mod1Mask/Mod4Mask/' > config.def.h
-cp config.def.h config.def.h.bak
-cat config.def.h.bak | sed 's/"st",/"alacritty",/' > config.def.h
-rm config.def.h.bak
-make && ln -sf /opt/dwm/dwm /usr/bin/dwm
+	ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+	hwclock --systohc
+	cp /etc/locale.gen /etc/locale.gen.bak
+	cat /etc/locale.gen.bak | sed "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" > /etc/locale.gen
+	rm /etc/locale.gen.bak
+	echo "LANG=en_US.UTF-8" > /etc/locale.conf
+	locale-gen
+	echo $HOSTNAME > /etc/hostname
+	echo "127.0.0.1\tlocalhost" >> /etc/hosts
+	cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
+	cat /etc/mkinitcpio.conf.bak | sed "s/$HOOKS/$OK_HOOKS/"  > /etc/mkinitcpio.conf
+	rm /etc/mkinitcpio.conf.bak
+	mkinitcpio -P
+	passwd <<EOFF
+	$ROOT_PASS
+	$ROOT_PASS
+	EOFF
+	bootctl install
+	cp /boot/loader/loader.conf /boot/loader/loader.conf.bak
+	cat /boot/loader/loader.conf.bak | sed "s/#timeout 3/timeout 3/"  > /boot/loader/loader.conf
+	cp /boot/loader/loader.conf /boot/loader/loader.conf.bak
+	cat /boot/loader/loader.conf.bak | sed "s/#console-mode keep/console-mode keep/"  > /boot/loader/loader.conf
+	rm /boot/loader/loader.conf.bak
+	echo "linux /vmlinuz-linux"  >> /boot/loader/entries/arch.conf
+	echo "initrd /initramfs-linux.img" >> /boot/loader/entries/arch.conf
+	echo "options root=UUID=$BLKID root=/dev/mapper/arch-root rw;" >> /boot/loader/entries/arch.conf
+	systemctl enable systemd-homed
+	systemctl start systemd-homed
+	systemctl enable systemd-networkd
+	systemctl enable systemd-resolved
+	systemctl enable iwd
+	echo "[Match]" >> /etc/systemd/network/25-wireless.network
+	echo "Name=wlan0" >> /etc/systemd/network/25-wireless.network
+	echo "[Network]" >> /etc/systemd/network/25-wireless.network
+	echo "DHCP=yes" >> /etc/systemd/network/25-wireless.network
+	echo "[Match]" >> /etc/systemd/network/20-wired.network
+	echo "Name=enp0s31f6" >> /etc/systemd/network/20-wired.network
+	echo "[Network]" >> /etc/systemd/network/20-wired.network
+	echo "DHCP=yes" >> /etc/systemd/network/20-wired.network
+	echo "Y" | pacman -S $APPS
+	systemctl enable docker
+	cd /opt
 EEOF
+if [[ $X_DISABLED -ne 1 ]] 
+	then
+		arch-chroot /mnt <<EEOF
+			git clone https://git.suckless.org/dwm 
+			cd dwm
+			cp config.def.h config.def.h.bak
+			cat config.def.h.bak | sed 's/Mod1Mask/Mod4Mask/' > config.def.h
+			cp config.def.h config.def.h.bak
+			cat config.def.h.bak | sed 's/"st",/"alacritty",/' > config.def.h
+			rm config.def.h.bak
+			make && ln -sf /opt/dwm/dwm /usr/bin/dwm
+EEOF
+fi
 cp dotfiles/.bashrc /mnt/root/.
 cp dotfiles/.vimrc /mnt/root/.
 umount -R /mnt
