@@ -46,7 +46,7 @@ EEOF
 mkfs.fat -F 32 /dev/sda1
 pvcreate /dev/sda2
 vgcreate arch /dev/sda2
-lvcreate -L 4096Mib /dev/mapper/arch -n swap
+#lvcreate -L 4096Mib /dev/mapper/arch -n swap
 lvcreate -L 60G /dev/mapper/arch -n root
 #lvcreate -L 60G /dev/mapper/arch -n home
 lvcreate -L 16G /dev/mapper/arch -n var
@@ -55,8 +55,8 @@ mkfs.ext4 /dev/mapper/arch-root
 #mkfs.ext4 /dev/mapper/arch-home 
 mkfs.ext4 /dev/mapper/arch-var 
 mkfs.ext4 /dev/mapper/arch-tmp 
-mkswap /dev/mapper/arch-swap 
-swapon /dev/mapper/arch-swap
+#mkswap /dev/mapper/arch-swap 
+#swapon /dev/mapper/arch-swap
 mount /dev/mapper/arch-root /mnt
 #mount -m /dev/mapper/arch-home /mnt/home
 mount -m /dev/mapper/arch-tmp /mnt/tmp
