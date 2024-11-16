@@ -1,0 +1,3 @@
+#!/bin/bash
+
+homectl create ssergiu --real-name="Sergiu Ster" --email-address="sergiuster2990@gmail.com" --member-of="docker" --shell="/bin/bash" --timezone="Europe/Berlin" --language="en_US.UTF-8"
