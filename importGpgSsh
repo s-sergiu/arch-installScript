@@ -7,7 +7,7 @@ echo $SOURCE
 echo $DIR
 
 mkdir $HOME/.ssh
-cp -R $DIR/ssh/*  $HOME/.ssh/.
+cp -R $DIR/../ssh/*  $HOME/.ssh/.
 
-gpg --import $DIR/gpgkeys/my_key.pub 
-gpg --import $DIR/gpgkeys/mygpgkey_sec.gpg 
+gpg --import $DIR/../gpgkeys/my_key.pub 
+gpg --import $DIR/../gpgkeys/mygpgkey_sec.gpg 
