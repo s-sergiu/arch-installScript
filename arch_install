@@ -25,11 +25,11 @@ if [[ $APPS == 'n' ]]
 				APPS="git gdb python-virtualenv openssh make gcc docker-compose docker alsa-utils acpilight slock man valgrind lynx man-pages github-cli --noconfirm"
 			else
 				X_DISABLED=1
-				APPS="git gdb python-virtualenv libdisplay-info weston firefox foot wayland wayland-protocols wmenu openssh make gcc docker-compose docker man valgrind man-pages --noconfirm"
+				APPS="git gdb python-virtualenv libdisplay-info weston noto-fonts-emoji firefox foot wayland wayland-protocols wmenu openssh make gcc docker-compose docker man valgrind man-pages --noconfirm"
 
 		fi
 	else
-		APPS="git gdb python-virtualenv openssh make gcc dmenu alacritty xorg-server xorg-xinit xorg-xinput chromium docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind man-pages github-cli ffmpeg --noconfirm"
+		APPS="git gdb python-virtualenv openssh make gcc noto-fonts-emoji dmenu alacritty xorg-server xorg-xinit xorg-xinput chromium docker-compose docker alsa-utils acpilight ttf-fira-code scrot slock man valgrind man-pages github-cli ffmpeg --noconfirm"
 fi
 
 fdisk /dev/sda <<EEOF
