@@ -135,6 +135,7 @@ EEOF
 fi
 cp dotfiles/.bashrc /mnt/root/.
 cp dotfiles/.vimrc /mnt/root/.
+cp -R dotfiles/.vim /mnt/root/.
 umount -R /mnt
 reboot
 }
